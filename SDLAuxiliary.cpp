@@ -2,10 +2,10 @@
 #include <iostream>
 #include <SDL2/SDL.h>
 #include <SDL2_gfx/SDL2_gfxPrimitives.h>
-#include "SDL2_own.h"
+#include "SDLAuxiliary.h"
 #include "Functions.h"
 
-int curlRGBA(SDL_Renderer * renderer, const Sint16 x1, const Sint16 y1, const Sint16 x2, const Sint16 y2,
+int SDLAuxiliary::curlRGBA(SDL_Renderer * renderer, const Sint16 x1, const Sint16 y1, const Sint16 x2, const Sint16 y2,
              const Sint16 amp,const Sint16 num_half_waves, int steps, Uint8 r, Uint8 g, Uint8 b, Uint8 a) {
     
     //the input values are short ints, but actually the calculation
@@ -71,4 +71,21 @@ int curlRGBA(SDL_Renderer * renderer, const Sint16 x1, const Sint16 y1, const Si
     }
     
     return bezierRGBA(renderer, ss, ts, npoints*num_half_waves, steps, r, g, b, a);
+}
+
+void SDLAuxiliary::drawPixel(SDL_Renderer *renderer, const int x, const int y, const int width, const int scale, const int red)
+{
+	boxRGBA(renderer, x - width / 2, y - width / 2, x + width / 2 + 1, y + width / 2 + 1, scale, scale * (1 - red), scale * (1 - red), 255);
+}
+
+void SDLAuxiliary::logSDLError(std::ostream &os, const std::string &msg){
+	os << msg << " error: " << SDL_GetError() << std::endl;
+}
+
+void SDLAuxiliary::logSDLDebug(std::ostream &os, const std::string &msg){
+	os << " [DEBUG]: " << msg << std::endl;
+}
+
+void SDLAuxiliary::logSDLDebug(std::ostream &os, const int msg){
+	os << " [DEBUG]: " << msg << std::endl;
 }

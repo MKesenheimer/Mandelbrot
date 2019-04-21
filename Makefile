@@ -6,7 +6,7 @@ COMPILER = g++
 
 ########################################################################
 ## Flags
-FLAGS   = -g -std=c++11
+FLAGS   = -g -std=c++17
 LDFLAGS =
 PREPRO  =
 ##verbose level 1
@@ -58,7 +58,7 @@ FRM = -framework SDL2 -framework SDL2_image -framework SDL2_gfx -framework Cocoa
 ## Linker files
 
 ### USER Files ###
-USER = Main.a Timer.a SDL2_own.a Functions.a
+USER = Main.a Timer.a SDLAuxiliary.a Functions.a Transformer.a SetCalculator.a
 
 ########################################################################
 ## Rules

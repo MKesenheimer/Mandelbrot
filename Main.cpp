@@ -11,84 +11,19 @@
 #include <SDL2_image/SDL_image.h>
 #include <SDL2_gfx/SDL2_gfxPrimitives.h>
 
-#include "SDL2_own.h"
+#include "SDLAuxiliary.h"
 #include "Main.h"
 #include "Timer.h"
 #include "cleanup.h"
 #include "Functions.h"
+#include "Transformer.h"
+#include "SetCalculator.h"
 
-using namespace::std;
+constexpr int SCREEN_WIDTH  = 900;
+constexpr int SCREEN_HEIGHT = 900;
+constexpr int FRAMES_PER_SECOND = 20; //Fps auf 20 festlegen
 
-const int SCREEN_WIDTH  = 900;
-const int SCREEN_HEIGHT = 900;
-const int FRAMES_PER_SECOND = 20;			//Fps auf 20 festlegen
-
-//Log an SDL error with some error message to the output stream of our choice
-void logSDLError(std::ostream &os, const std::string &msg){
-	os << msg << " error: " << SDL_GetError() << std::endl;
-}
-
-//Log an SDL debug output with some message to the output stream of our choice
-void logSDLDebug(std::ostream &os, const std::string &msg){
-	os << " [DEBUG]: " << msg << std::endl;
-}
-
-void logSDLDebug(std::ostream &os, const int msg){
-	os << " [DEBUG]: " << msg << std::endl;
-}
-
-void drawPixel(SDL_Renderer *renderer, const int x, const int y, const int width, const int scale, const int red = 0)
-{
-	boxRGBA(renderer, x - width / 2, y - width / 2, x + width / 2 + 1, y + width / 2 + 1, scale, scale * (1 - red), scale * (1 - red), 255);
-}
-
-void transform(const double deltaX, const double deltaY, const double alpha, double& x, double& y)
-{
-	double tempX = std::cos(alpha) * x - std::sin(alpha) * y + deltaX;
-	y            = std::sin(alpha) * x + std::cos(alpha) * y + deltaY;
-	x = tempX;
-}
-
-void transform(const double x0, const double y0, const double factorX, const double factorY, double& x, double& y)
-{
-	x = (x - x0) * factorX;
-	y = (y - y0) * factorY;
-}
-
-double calculateDivergence(const std::complex<double>& point, const std::complex<double>& constant = std::complex<double>(0.1, 0.4), const int maxit = 1000)
-{
-	// Mandelbrot set
-	std::complex<double> zn = 0;
-	std::complex<double> c = point;
-	
-	// Julia set
-	//std::complex<double> zn = point;
-	//std::complex<double> c = constant;
-	
-	double div = 0;
-	for (int i = 0; i < maxit; ++i)
-	{
-		//zn = std::pow(zn, 2.0) + c * std::pow(-1, i);
-		zn = std::pow(zn, 2.0) + c;
-		double norm = std::norm(zn);
-		if (norm >= 4.0)
-		{
-			div = i;
-			break;
-		}
-		else if (norm < 0.001)
-		{
-			i = maxit;
-			break;
-		}
-		 
-	}
-	
-	//std::cout << div << std::endl;
-	return div;
-}
-
-int main( int argc, char* args[] ) {
+int main( int argc, char* args[]) {
 
 	int frame = 0; //take records of frame number
 	bool cap = true; //Framecap an oder ausschalten
@@ -106,7 +41,7 @@ int main( int argc, char* args[] ) {
     
 	//Start up SDL and make sure it went ok
 	if (SDL_Init(SDL_INIT_VIDEO) != 0){
-		logSDLError(std::cout, "SDL_Init");
+		SDLAuxiliary::logSDLError(std::cout, "SDL_Init");
 		return 1;
 	}
 
@@ -116,14 +51,14 @@ int main( int argc, char* args[] ) {
 			SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
 	if (window == NULL)
 	{
-		logSDLError(std::cout, "CreateWindow");
+		SDLAuxiliary::logSDLError(std::cout, "CreateWindow");
 		SDL_Quit();
 		return 1;
 	}
 	SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 	if (renderer == NULL)
 	{
-		logSDLError(std::cout, "CreateRenderer");
+		SDLAuxiliary::logSDLError(std::cout, "CreateRenderer");
 		cleanup(window);
 		SDL_Quit();
 		return 1;
@@ -231,10 +166,11 @@ int main( int argc, char* args[] ) {
 				double mouseX = static_cast<double>(MOUSE_X);
 				double mouseY = static_cast<double>(MOUSE_Y);
 				// apply transformations to the mouse coordinates
-				transform(SCREEN_WIDTH / 2.0, SCREEN_HEIGHT / 2.0, 1.0 / SCREEN_WIDTH, -1.0 / SCREEN_WIDTH, mouseX, mouseY);
-				transform(-X0, -Y0, 1.0, 1.0, mouseX, mouseY);
-				transform(X0, Y0, zoom, zoom, mouseX, mouseY);
-				transform(-X0, -Y0, 1.0, 1.0, mouseX, mouseY);
+				// (see lines 262 and following for better explanation)
+				Transformer::Linear(SCREEN_WIDTH / 2.0, SCREEN_HEIGHT / 2.0, 1.0 / SCREEN_WIDTH, -1.0 / SCREEN_WIDTH, mouseX, mouseY);
+				Transformer::Linear(-X0, -Y0, 1.0, 1.0, mouseX, mouseY);
+				Transformer::Linear(X0, Y0, zoom, zoom, mouseX, mouseY);
+				Transformer::Linear(-X0, -Y0, 1.0, 1.0, mouseX, mouseY);
 				X0 = mouseX;
 				Y0 = mouseY;
 				std::cout << "mouse coord. = " << mouseX << ", " << mouseY << ", zoom = " << zoom << std::endl;
@@ -245,7 +181,7 @@ int main( int argc, char* args[] ) {
 				double mouseX = static_cast<double>(MOUSE_X);
 				double mouseY = static_cast<double>(MOUSE_Y);
 				// apply transformations to the mouse coordinates
-				transform(SCREEN_WIDTH / 2.0, SCREEN_HEIGHT / 2.0, 4.0 / SCREEN_WIDTH, -4.0 / SCREEN_WIDTH, mouseX, mouseY);
+				Transformer::Linear(SCREEN_WIDTH / 2.0, SCREEN_HEIGHT / 2.0, 4.0 / SCREEN_WIDTH, -4.0 / SCREEN_WIDTH, mouseX, mouseY);
 				constant = std::complex<double>(mouseX, mouseY);
 				std::cout << "constant " << constant << std::endl;
 			}
@@ -266,15 +202,15 @@ int main( int argc, char* args[] ) {
 					// (SCREEN_WIDTH, 0) -> (0.5, 0.5)
 					// (0, SCREEN_HEIGHT) -> (-0.5, -0.5)
 					// (SCREEN_WIDTH, SCREEN_HEIGHT) -> (0.5, -0.5)
-					transform(SCREEN_WIDTH / 2.0, SCREEN_HEIGHT / 2.0, 1.0 / SCREEN_WIDTH, -1.0 / SCREEN_WIDTH, X, Y);
+					Transformer::Linear(SCREEN_WIDTH / 2.0, SCREEN_HEIGHT / 2.0, 1.0 / SCREEN_WIDTH, -1.0 / SCREEN_WIDTH, X, Y);
 					
 					// apply the additional scalings and transformations
-					transform(-X0, -Y0, 1.0, 1.0, X, Y); // move to new origin
-					transform(X0, Y0, zoom, zoom, X, Y); // scale everything around the new origin (this moves the origin)
-					transform(-X0, -Y0, 1.0, 1.0, X, Y); // go back to origin
+					Transformer::Linear(-X0, -Y0, 1.0, 1.0, X, Y); // move to new origin
+					Transformer::Linear(X0, Y0, zoom, zoom, X, Y); // scale everything around the new origin (this moves the origin)
+					Transformer::Linear(-X0, -Y0, 1.0, 1.0, X, Y); // go back to origin
 					
 					const std::complex<double> point(X, Y);
-					int divstr = 30 * calculateDivergence(point, constant, 100);
+					int divstr = 30 * SetCalculator::Mandelbrot(point, constant, 100);
 					
 					//std::cout << point << std::endl;
 					
@@ -290,16 +226,16 @@ int main( int argc, char* args[] ) {
 #endif
 					
 					// undo the additional transformations
-					transform(X0, Y0, 1.0, 1.0, X, Y);
-					transform(-X0 * zoom, -Y0 * zoom, 1.0 / zoom, 1.0 / zoom, X, Y);
-					transform(X0, Y0, 1.0, 1.0, X, Y);
+					Transformer::Linear(X0, Y0, 1.0, 1.0, X, Y);
+					Transformer::Linear(-X0 * zoom, -Y0 * zoom, 1.0 / zoom, 1.0 / zoom, X, Y);
+					Transformer::Linear(X0, Y0, 1.0, 1.0, X, Y);
 					
 					// transform back
-					transform(-0.5, 0.5, SCREEN_WIDTH, -SCREEN_WIDTH, X, Y);
+					Transformer::Linear(-0.5, 0.5, SCREEN_WIDTH, -SCREEN_WIDTH, X, Y);
 					
 					//std::cout << X << ", " << Y << std::endl << std::endl;
 					
-					drawPixel(renderer,
+					SDLAuxiliary::drawPixel(renderer,
 						static_cast<int>(X),
 						static_cast<int>(Y),
 						static_cast<int>(deltaX), divstr, isOrigin);
