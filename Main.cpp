@@ -55,7 +55,7 @@ void transform(const double x0, const double y0, const double factorX, const dou
 	y = (y - y0) * factorY;
 }
 
-double calculateDivergence(const std::complex<double>& point, const int maxit = 1000)
+double calculateDivergence(const std::complex<double>& point, const std::complex<double>& constant = std::complex<double>(0.1, 0.4), const int maxit = 1000)
 {
 	// Mandelbrot set
 	std::complex<double> zn = 0;
@@ -63,11 +63,12 @@ double calculateDivergence(const std::complex<double>& point, const int maxit = 
 	
 	// Julia set
 	//std::complex<double> zn = point;
-	//std::complex<double> c = std::complex<double>(0.2, 0.4);
+	//std::complex<double> c = constant;
 	
 	double div = 0;
 	for (int i = 0; i < maxit; ++i)
 	{
+		//zn = std::pow(zn, 2.0) + c * std::pow(-1, i);
 		zn = std::pow(zn, 2.0) + c;
 		double norm = std::norm(zn);
 		if (norm >= 4.0)
@@ -132,12 +133,13 @@ int main( int argc, char* args[] ) {
 	bool quit = false;
 	bool update = true;
 	bool updateMouse = false;
+	bool updateConstant = false;
 	bool highRes = false;
 	int wheel = 0;
 	int MOUSE_X = SCREEN_WIDTH / 2, MOUSE_Y = SCREEN_HEIGHT / 2;
-	double zoomX = 0, zoomY = 0;
-	double X0 = -0.74; //mouseX;
-	double Y0 = 0.21; //mouseY;
+	double X0 = 0.0; //-0.74;
+	double Y0 = 0.0; //0.21;
+	std::complex<double> constant(0, 0);
 	
 	//our event structure
 	SDL_Event e;
@@ -181,6 +183,13 @@ int main( int argc, char* args[] ) {
 					updateMouse = true;
 					//SDL_Log("Mouse Button 2 (right) is pressed.");
 				}
+				if (SDL_GetMouseState(NULL, NULL) & SDL_BUTTON(SDL_BUTTON_RIGHT))
+				{
+					SDL_GetMouseState(&MOUSE_X, &MOUSE_Y);
+					update = true;
+					updateConstant = true;
+					//SDL_Log("Mouse Button 2 (right) is pressed.");
+				}
 				if (e.type == SDL_MOUSEWHEEL)
 				{
 					//SDL_GetMouseState(&MOUSE_X, &MOUSE_Y);
@@ -206,9 +215,9 @@ int main( int argc, char* args[] ) {
 			boxRGBA(renderer, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 0, 255);
 		
 			// number of Pixels per SCREEN_WIDTH
-			double resolution = 50;
+			double resolution = 200;
 			if (highRes)
-				resolution = 500;
+				resolution = 1000;
 			if (resolution >= SCREEN_WIDTH)
 				resolution = SCREEN_WIDTH;
 		
@@ -216,7 +225,7 @@ int main( int argc, char* args[] ) {
 			if (wheel > 0)
 				zoom /= std::pow(2.0, wheel);
 			//const double angle = 0.0;
-
+	
 			if (updateMouse)
 			{
 				double mouseX = static_cast<double>(MOUSE_X);
@@ -228,9 +237,17 @@ int main( int argc, char* args[] ) {
 				transform(-X0, -Y0, 1.0, 1.0, mouseX, mouseY);
 				X0 = mouseX;
 				Y0 = mouseY;
-				//X0 = X0 + mouseX * 0.01;
-				//Y0 = Y0 + mouseY * 0.01;
 				std::cout << "mouse coord. = " << mouseX << ", " << mouseY << ", zoom = " << zoom << std::endl;
+			}
+		
+			if (updateConstant)
+			{
+				double mouseX = static_cast<double>(MOUSE_X);
+				double mouseY = static_cast<double>(MOUSE_Y);
+				// apply transformations to the mouse coordinates
+				transform(SCREEN_WIDTH / 2.0, SCREEN_HEIGHT / 2.0, 4.0 / SCREEN_WIDTH, -4.0 / SCREEN_WIDTH, mouseX, mouseY);
+				constant = std::complex<double>(mouseX, mouseY);
+				std::cout << "constant " << constant << std::endl;
 			}
 			
 			const double deltaX = SCREEN_WIDTH / resolution;
@@ -257,7 +274,7 @@ int main( int argc, char* args[] ) {
 					transform(-X0, -Y0, 1.0, 1.0, X, Y); // go back to origin
 					
 					const std::complex<double> point(X, Y);
-					int divstr = 30 * calculateDivergence(point, 100);
+					int divstr = 30 * calculateDivergence(point, constant, 100);
 					
 					//std::cout << point << std::endl;
 					
@@ -291,11 +308,10 @@ int main( int argc, char* args[] ) {
 			
 			// render
 			SDL_RenderPresent(renderer);
-		
-			//X0 = mouseX;
-			//Y0 = mouseY;
+
 			update = false;
 			updateMouse = false;
+			updateConstant = false;
 		}
         
         // Timer related stuff
