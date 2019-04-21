@@ -14,7 +14,6 @@
 #include "SDLAuxiliary.h"
 #include "Main.h"
 #include "Timer.h"
-#include "cleanup.h"
 #include "Functions.h"
 #include "Transformer.h"
 #include "SetCalculator.h"
@@ -40,7 +39,8 @@ int main( int argc, char* args[]) {
     int dt = 1;
     
 	//Start up SDL and make sure it went ok
-	if (SDL_Init(SDL_INIT_VIDEO) != 0){
+	if (SDL_Init(SDL_INIT_VIDEO) != 0)
+	{
 		SDLAuxiliary::logSDLError(std::cout, "SDL_Init");
 		return 1;
 	}
@@ -55,11 +55,12 @@ int main( int argc, char* args[]) {
 		SDL_Quit();
 		return 1;
 	}
+	
 	SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 	if (renderer == NULL)
 	{
 		SDLAuxiliary::logSDLError(std::cout, "CreateRenderer");
-		cleanup(window);
+		SDLAuxiliary::cleanup(window);
 		SDL_Quit();
 		return 1;
 	}
@@ -78,14 +79,17 @@ int main( int argc, char* args[]) {
 	
 	//our event structure
 	SDL_Event e;
-	while (!quit){
+	while (!quit)
+	{
         //start the fps timer
         fps.start();
         
 		//Read any events that occured, for now we'll just quit if any event occurs
-		while (SDL_PollEvent(&e)) {
+		while (SDL_PollEvent(&e))
+		{
 			//If user closes the window
-			if (e.type == SDL_QUIT){
+			if (e.type == SDL_QUIT)
+			{
 				quit = true;
 			}
 			//If user presses any key
@@ -210,7 +214,8 @@ int main( int argc, char* args[]) {
 					Transformer::Linear(-X0, -Y0, 1.0, 1.0, X, Y); // go back to origin
 					
 					const std::complex<double> point(X, Y);
-					int divstr = 30 * SetCalculator::Mandelbrot(point, constant, 100);
+					//int divstr = 30 * SetCalculator::Mandelbrot(point, constant, 100);
+					int divstr = 30 * SetCalculator::Julia(point, constant, 100);
 					
 					//std::cout << point << std::endl;
 					
@@ -253,7 +258,8 @@ int main( int argc, char* args[]) {
         // Timer related stuff
         oldTime = newTime;
         newTime = worldtime.getTicks();
-        if (newTime > oldTime) {
+        if (newTime > oldTime)
+		{
             dt = (newTime - oldTime) / 1000.; // small time between two frames in s
         }
         if(dt == 0) dt = 1;
@@ -261,12 +267,14 @@ int main( int argc, char* args[]) {
         //increment the frame number
         frame++;
         //apply the fps cap
-		if( (cap == true) && (fps.getTicks() < 1000/FRAMES_PER_SECOND) ) {
+		if((cap == true) && (fps.getTicks() < 1000/FRAMES_PER_SECOND))
+		{
 			SDL_Delay( (1000/FRAMES_PER_SECOND) - fps.getTicks() );
 		}
             
         //update the window caption
-		if( worldtime.getTicks() > 1000 ) {
+		if(worldtime.getTicks() > 1000)
+		{
 			std::stringstream caption;
 			caption << "Mandelbrot, FPS = " << 1000.f*frame/worldtime.getTicks();
             SDL_SetWindowTitle(window,caption.str().c_str());
@@ -276,7 +284,7 @@ int main( int argc, char* args[]) {
 	}
     
 	//Destroy the various items
-	cleanup(renderer, window);
+	SDLAuxiliary::cleanup(renderer, window);
 	IMG_Quit();
 	SDL_Quit();
 

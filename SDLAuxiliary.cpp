@@ -1,6 +1,5 @@
 #include <math.h>
 #include <iostream>
-#include <SDL2/SDL.h>
 #include <SDL2_gfx/SDL2_gfxPrimitives.h>
 #include "SDLAuxiliary.h"
 #include "Functions.h"
@@ -88,4 +87,39 @@ void SDLAuxiliary::logSDLDebug(std::ostream &os, const std::string &msg){
 
 void SDLAuxiliary::logSDLDebug(std::ostream &os, const int msg){
 	os << " [DEBUG]: " << msg << std::endl;
+}
+
+
+/*
+ * These specializations serve to free the passed argument and also provide the
+ * base cases for the recursive call above, eg. when args is only a single
+ * item one of the specializations below will be called by
+ * cleanup(std::forward<Args>(args)...), ending the recursion
+ */
+template<>
+void SDLAuxiliary::cleanup<SDL_Window>(SDL_Window *win)
+{
+	if (!win) return;
+	SDL_DestroyWindow(win);
+}
+
+template<>
+void SDLAuxiliary::cleanup<SDL_Renderer>(SDL_Renderer *ren)
+{
+	if (!ren) return;
+	SDL_DestroyRenderer(ren);
+}
+
+template<>
+void SDLAuxiliary::cleanup<SDL_Texture>(SDL_Texture *tex)
+{
+	if (!tex) return;
+	SDL_DestroyTexture(tex);
+}
+
+template<>
+void SDLAuxiliary::cleanup<SDL_Surface>(SDL_Surface *surf)
+{
+	if (!surf) return;
+	SDL_FreeSurface(surf);
 }

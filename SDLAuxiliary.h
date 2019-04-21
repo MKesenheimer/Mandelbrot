@@ -1,4 +1,6 @@
 #pragma once
+#include <utility>
+#include <SDL2/SDL.h>
 
 class SDLAuxiliary
 {
@@ -17,4 +19,20 @@ public:
 	static void logSDLDebug(std::ostream &os, const std::string &msg);
 
 	static void logSDLDebug(std::ostream &os, const int msg);
+	
+	template<typename T>
+	static void cleanup(T *t);
+	
+	/*
+	* Recurse through the list of arguments to clean up, cleaning up
+	* the first one in the list each iteration.
+	*/
+	template<typename T, typename... Args>
+	static void cleanup(T *t, Args&&... args)
+	{
+		//Cleanup the first item in the list
+		cleanup(t);
+		//Clean up the remaining arguments
+		cleanup(std::forward<Args>(args)...);
+	}
 };
