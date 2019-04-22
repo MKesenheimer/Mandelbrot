@@ -17,12 +17,30 @@
 #include "Functions.h"
 #include "Transformer.h"
 #include "SetCalculator.h"
+#include "CommandLineParser.h"
 
-constexpr int SCREEN_WIDTH  = 900;
-constexpr int SCREEN_HEIGHT = 900;
-constexpr int FRAMES_PER_SECOND = 20; //Fps auf 20 festlegen
 
-int main( int argc, char* args[]) {
+
+int main(int argc, char* args[])
+{
+	// Parse the command line arguments
+	std::string set("Mandelbrot");
+	if (CommandLineParser::cmdOptionExists(args, args + argc, "-s"))
+		set = static_cast<std::string>(CommandLineParser::getCmdOption(args, args + argc, "-s"));
+
+	int SCREEN_WIDTH = 900;
+	std::string width;
+	if (CommandLineParser::cmdOptionExists(args, args + argc, "-w"))
+		SCREEN_WIDTH = std::stoi(static_cast<std::string>(CommandLineParser::getCmdOption(args, args + argc, "-w")));
+	
+	int SCREEN_HEIGHT = 900;
+	if (CommandLineParser::cmdOptionExists(args, args + argc, "-h"))
+		SCREEN_HEIGHT = std::stoi(static_cast<std::string>(CommandLineParser::getCmdOption(args, args + argc, "-h")));
+	
+	int FRAMES_PER_SECOND = 20; //Fps auf 20 festlegen
+	if (CommandLineParser::cmdOptionExists(args, args + argc, "-f"))
+		FRAMES_PER_SECOND = std::stoi(static_cast<std::string>(CommandLineParser::getCmdOption(args, args + argc, "-f")));
+
 
 	int frame = 0; //take records of frame number
 	bool cap = true; //Framecap an oder ausschalten
@@ -150,28 +168,27 @@ int main( int argc, char* args[]) {
 		{
 			//Rendering
 			SDL_RenderClear(renderer);
-			//Draw the background white
-			boxRGBA(renderer, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 0, 255);
+			//Draw the background black
+			//boxRGBA(renderer, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 0, 255);
 		
 			// number of Pixels per SCREEN_WIDTH
 			double resolution = 200;
 			if (highRes)
-				resolution = 1000;
+				resolution = SCREEN_WIDTH;
 			if (resolution >= SCREEN_WIDTH)
 				resolution = SCREEN_WIDTH;
 		
 			double zoom = 5;
 			if (wheel > 0)
 				zoom /= std::pow(2.0, wheel);
-			//const double angle = 0.0;
-	
+
 			if (updateMouse)
 			{
 				double mouseX = static_cast<double>(MOUSE_X);
 				double mouseY = static_cast<double>(MOUSE_Y);
 				// apply transformations to the mouse coordinates
 				// (see lines 262 and following for better explanation)
-				Transformer::Linear(SCREEN_WIDTH / 2.0, SCREEN_HEIGHT / 2.0, 1.0 / SCREEN_WIDTH, -1.0 / SCREEN_WIDTH, mouseX, mouseY);
+				Transformer::Linear(SCREEN_WIDTH / 2.0, SCREEN_HEIGHT / 2.0, 1.0 / SCREEN_WIDTH, -1.0 / SCREEN_HEIGHT, mouseX, mouseY);
 				Transformer::Linear(-X0, -Y0, 1.0, 1.0, mouseX, mouseY);
 				Transformer::Linear(X0, Y0, zoom, zoom, mouseX, mouseY);
 				Transformer::Linear(-X0, -Y0, 1.0, 1.0, mouseX, mouseY);
@@ -185,7 +202,7 @@ int main( int argc, char* args[]) {
 				double mouseX = static_cast<double>(MOUSE_X);
 				double mouseY = static_cast<double>(MOUSE_Y);
 				// apply transformations to the mouse coordinates
-				Transformer::Linear(SCREEN_WIDTH / 2.0, SCREEN_HEIGHT / 2.0, 4.0 / SCREEN_WIDTH, -4.0 / SCREEN_WIDTH, mouseX, mouseY);
+				Transformer::Linear(SCREEN_WIDTH / 2.0, SCREEN_HEIGHT / 2.0, 4.0 / SCREEN_WIDTH, -4.0 / SCREEN_HEIGHT, mouseX, mouseY);
 				constant = std::complex<double>(mouseX, mouseY);
 				std::cout << "constant " << constant << std::endl;
 			}
@@ -206,7 +223,7 @@ int main( int argc, char* args[]) {
 					// (SCREEN_WIDTH, 0) -> (0.5, 0.5)
 					// (0, SCREEN_HEIGHT) -> (-0.5, -0.5)
 					// (SCREEN_WIDTH, SCREEN_HEIGHT) -> (0.5, -0.5)
-					Transformer::Linear(SCREEN_WIDTH / 2.0, SCREEN_HEIGHT / 2.0, 1.0 / SCREEN_WIDTH, -1.0 / SCREEN_WIDTH, X, Y);
+					Transformer::Linear(SCREEN_WIDTH / 2.0, SCREEN_HEIGHT / 2.0, 1.0 / SCREEN_WIDTH, -1.0 / SCREEN_HEIGHT, X, Y);
 					
 					// apply the additional scalings and transformations
 					Transformer::Linear(-X0, -Y0, 1.0, 1.0, X, Y); // move to new origin
@@ -214,8 +231,12 @@ int main( int argc, char* args[]) {
 					Transformer::Linear(-X0, -Y0, 1.0, 1.0, X, Y); // go back to origin
 					
 					const std::complex<double> point(X, Y);
-					//int divstr = 30 * SetCalculator::Mandelbrot(point, constant, 100);
-					int divstr = 30 * SetCalculator::Julia(point, constant, 100);
+					int divstr = 0;
+					if (set == "Mandelbrot" || set == "mandelbrot")
+						divstr = 50 * SetCalculator::Mandelbrot(point, constant, 100);
+					
+					if (set == "Julia" || set == "julia")
+						divstr = 50 * SetCalculator::Julia(point, constant, 100);
 					
 					//std::cout << point << std::endl;
 					

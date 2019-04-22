@@ -74,21 +74,24 @@ int SDLAuxiliary::curlRGBA(SDL_Renderer * renderer, const Sint16 x1, const Sint1
 
 void SDLAuxiliary::drawPixel(SDL_Renderer *renderer, const int x, const int y, const int width, const int scale, const int red)
 {
-	boxRGBA(renderer, x - width / 2, y - width / 2, x + width / 2 + 1, y + width / 2 + 1, scale, scale * (1 - red), scale * (1 - red), 255);
+	const int regPixel = 10;
+	boxRGBA(renderer, x - width / 2, y - width / 2, x + width / 2 + regPixel, y + width / 2 + regPixel, scale, scale * (1 - red), scale * (1 - red), 255);
 }
 
-void SDLAuxiliary::logSDLError(std::ostream &os, const std::string &msg){
+void SDLAuxiliary::logSDLError(std::ostream &os, const std::string &msg)
+{
 	os << msg << " error: " << SDL_GetError() << std::endl;
 }
 
-void SDLAuxiliary::logSDLDebug(std::ostream &os, const std::string &msg){
+void SDLAuxiliary::logSDLDebug(std::ostream &os, const std::string &msg)
+{
 	os << " [DEBUG]: " << msg << std::endl;
 }
 
-void SDLAuxiliary::logSDLDebug(std::ostream &os, const int msg){
+void SDLAuxiliary::logSDLDebug(std::ostream &os, const int msg)
+{
 	os << " [DEBUG]: " << msg << std::endl;
 }
-
 
 /*
  * These specializations serve to free the passed argument and also provide the

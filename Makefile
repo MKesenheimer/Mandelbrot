@@ -58,7 +58,7 @@ FRM = -framework SDL2 -framework SDL2_image -framework SDL2_gfx -framework Cocoa
 ## Linker files
 
 ### USER Files ###
-USER = Main.a Timer.a SDLAuxiliary.a Functions.a Transformer.a SetCalculator.a
+USER = Main.a Timer.a SDLAuxiliary.a Functions.a Transformer.a SetCalculator.a CommandLineParser.a
 
 ########################################################################
 ## Rules
