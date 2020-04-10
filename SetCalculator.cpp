@@ -31,7 +31,7 @@ int SetCalculator::calculateDiv(std::complex<double> zn, std::complex<double> c,
 			div = i;
 			break;
 		}
-		else if (norm < 0.001)
+		else if (norm < 0.01)
 		{
 			div = 0;
 			break;

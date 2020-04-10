@@ -1,6 +1,6 @@
 #include <math.h>
 #include <iostream>
-#include <SDL2_gfx/SDL2_gfxPrimitives.h>
+#include <SDL2_gfxPrimitives.h>
 #include "SDLAuxiliary.h"
 #include "Functions.h"
 

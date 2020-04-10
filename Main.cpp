@@ -7,9 +7,9 @@
 #define _USE_MATH_DEFINES
 #include <math.h>
 #include <complex>
-#include <SDL2/SDL.h>
-#include <SDL2_image/SDL_image.h>
-#include <SDL2_gfx/SDL2_gfxPrimitives.h>
+#include <SDL.h>
+#include <SDL_image.h>
+#include <SDL2_gfxPrimitives.h>
 
 #include "SDLAuxiliary.h"
 #include "Main.h"
@@ -233,11 +233,18 @@ int main(int argc, char* args[])
 					const std::complex<double> point(X, Y);
 					int divstr = 0;
 					if (set == "Mandelbrot" || set == "mandelbrot")
+					{
 						divstr = 50 * SetCalculator::Mandelbrot(point, constant, 100);
-					
-					if (set == "Julia" || set == "julia")
+					}
+					else if (set == "Julia" || set == "julia")
+					{
 						divstr = 50 * SetCalculator::Julia(point, constant, 100);
-					
+					}
+					else
+					{
+						std::cout << "Error: Set not defined." << std::endl;
+						std::exit(-1);
+					}
 					//std::cout << point << std::endl;
 					
 					// mark the new origin
