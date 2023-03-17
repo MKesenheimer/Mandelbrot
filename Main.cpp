@@ -32,11 +32,11 @@ int main(int argc, char* args[])
 	std::string width;
 	if (CommandLineParser::cmdOptionExists(args, args + argc, "-w"))
 		SCREEN_WIDTH = std::stoi(static_cast<std::string>(CommandLineParser::getCmdOption(args, args + argc, "-w")));
-	
+
 	int SCREEN_HEIGHT = 900;
 	if (CommandLineParser::cmdOptionExists(args, args + argc, "-h"))
 		SCREEN_HEIGHT = std::stoi(static_cast<std::string>(CommandLineParser::getCmdOption(args, args + argc, "-h")));
-	
+
 	int FRAMES_PER_SECOND = 20; //Fps auf 20 festlegen
 	if (CommandLineParser::cmdOptionExists(args, args + argc, "-f"))
 		FRAMES_PER_SECOND = std::stoi(static_cast<std::string>(CommandLineParser::getCmdOption(args, args + argc, "-f")));
@@ -44,18 +44,18 @@ int main(int argc, char* args[])
 
 	int frame = 0; //take records of frame number
 	bool cap = true; //Framecap an oder ausschalten
-    
+
     //Timer zum festlegen der FPS
 	Timer fps;
     //Timer zum errechnen der weltweit vergangenen Zeit
 	Timer worldtime;
     worldtime.start();
-    
+
     //calculate the small time between two frames in ms
     int oldTime = 0;
     int newTime = 0;
     int dt = 1;
-    
+
 	//Start up SDL and make sure it went ok
 	if (SDL_Init(SDL_INIT_VIDEO) != 0)
 	{
@@ -73,7 +73,7 @@ int main(int argc, char* args[])
 		SDL_Quit();
 		return 1;
 	}
-	
+
 	SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 	if (renderer == NULL)
 	{
@@ -82,7 +82,7 @@ int main(int argc, char* args[])
 		SDL_Quit();
 		return 1;
 	}
-	
+
 	// flags
 	bool quit = false;
 	bool update = true;
@@ -94,14 +94,14 @@ int main(int argc, char* args[])
 	double X0 = 0.0; //-0.74;
 	double Y0 = 0.0; //0.21;
 	std::complex<double> constant(0, 0);
-	
+
 	//our event structure
 	SDL_Event e;
 	while (!quit)
 	{
         //start the fps timer
         fps.start();
-        
+
 		//Read any events that occured, for now we'll just quit if any event occurs
 		while (SDL_PollEvent(&e))
 		{
@@ -118,7 +118,7 @@ int main(int argc, char* args[])
 				{
                     cap = !cap;
 				}
-				
+
 				if (e.key.keysym.sym == SDLK_SPACE)
 				{
 					update = true;
@@ -128,7 +128,7 @@ int main(int argc, char* args[])
 					else
 						std::cout << "high resolution disabled." << std::endl;
 				}
-				
+
 			}
 			if (!highRes)
 			{
@@ -156,28 +156,28 @@ int main(int argc, char* args[])
 						wheel++;
 					else
 						wheel--;
-					
+
 					if (wheel < 0)
 						wheel = 0;
 					//SDL_Log("Mouse Wheel event");
 				}
 			}
 		}
-		
+
 		if (update)
 		{
 			//Rendering
 			SDL_RenderClear(renderer);
 			//Draw the background black
 			//boxRGBA(renderer, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, 0, 255);
-		
+
 			// number of Pixels per SCREEN_WIDTH
 			double resolution = 200;
 			if (highRes)
 				resolution = SCREEN_WIDTH;
 			if (resolution >= SCREEN_WIDTH)
 				resolution = SCREEN_WIDTH;
-		
+
 			double zoom = 5;
 			if (wheel > 0)
 				zoom /= std::pow(2.0, wheel);
@@ -196,7 +196,7 @@ int main(int argc, char* args[])
 				Y0 = mouseY;
 				std::cout << "mouse coord. = " << mouseX << ", " << mouseY << ", zoom = " << zoom << std::endl;
 			}
-		
+
 			if (updateConstant)
 			{
 				double mouseX = static_cast<double>(MOUSE_X);
@@ -206,7 +206,7 @@ int main(int argc, char* args[])
 				constant = std::complex<double>(mouseX, mouseY);
 				std::cout << "constant " << constant << std::endl;
 			}
-			
+
 			const double deltaX = SCREEN_WIDTH / resolution;
 			const double deltaY = deltaX;
 			for (int i = 0; i <= resolution; ++i)
@@ -214,7 +214,7 @@ int main(int argc, char* args[])
 				for (int j = 0; j <= resolution; ++j)
 				{
 					double X = i * deltaX, Y = j * deltaY;
-					
+
 					// transform the coordinates of the screen into a coordinate
 					// system where the origin is in the middle of the screen and
 					// where the scale is (-0.5, 0.5) in both directions
@@ -224,12 +224,12 @@ int main(int argc, char* args[])
 					// (0, SCREEN_HEIGHT) -> (-0.5, -0.5)
 					// (SCREEN_WIDTH, SCREEN_HEIGHT) -> (0.5, -0.5)
 					Transformer::Linear(SCREEN_WIDTH / 2.0, SCREEN_HEIGHT / 2.0, 1.0 / SCREEN_WIDTH, -1.0 / SCREEN_HEIGHT, X, Y);
-					
+
 					// apply the additional scalings and transformations
 					Transformer::Linear(-X0, -Y0, 1.0, 1.0, X, Y); // move to new origin
 					Transformer::Linear(X0, Y0, zoom, zoom, X, Y); // scale everything around the new origin (this moves the origin)
 					Transformer::Linear(-X0, -Y0, 1.0, 1.0, X, Y); // go back to origin
-					
+
 					const std::complex<double> point(X, Y);
 					int divstr = 0;
 					if (set == "Mandelbrot" || set == "mandelbrot")
@@ -246,7 +246,7 @@ int main(int argc, char* args[])
 						std::exit(-1);
 					}
 					//std::cout << point << std::endl;
-					
+
 					// mark the new origin
 					int isOrigin = 0;
 //#define MARKPOINT
@@ -257,24 +257,24 @@ int main(int argc, char* args[])
 						isOrigin = 1;
 					}
 #endif
-					
+
 					// undo the additional transformations
 					Transformer::Linear(X0, Y0, 1.0, 1.0, X, Y);
 					Transformer::Linear(-X0 * zoom, -Y0 * zoom, 1.0 / zoom, 1.0 / zoom, X, Y);
 					Transformer::Linear(X0, Y0, 1.0, 1.0, X, Y);
-					
+
 					// transform back
 					Transformer::Linear(-0.5, 0.5, SCREEN_WIDTH, -SCREEN_WIDTH, X, Y);
-					
+
 					//std::cout << X << ", " << Y << std::endl << std::endl;
-					
+
 					SDLAuxiliary::drawPixel(renderer,
 						static_cast<int>(X),
 						static_cast<int>(Y),
 						static_cast<int>(deltaX), divstr, isOrigin);
 				}
 			}
-			
+
 			// render
 			SDL_RenderPresent(renderer);
 
@@ -282,7 +282,7 @@ int main(int argc, char* args[])
 			updateMouse = false;
 			updateConstant = false;
 		}
-        
+
         // Timer related stuff
         oldTime = newTime;
         newTime = worldtime.getTicks();
@@ -291,7 +291,7 @@ int main(int argc, char* args[])
             dt = (newTime - oldTime) / 1000.; // small time between two frames in s
         }
         if(dt == 0) dt = 1;
-        
+
         //increment the frame number
         frame++;
         //apply the fps cap
@@ -299,7 +299,7 @@ int main(int argc, char* args[])
 		{
 			SDL_Delay( (1000/FRAMES_PER_SECOND) - fps.getTicks() );
 		}
-            
+
         //update the window caption
 		if(worldtime.getTicks() > 1000)
 		{
@@ -310,7 +310,7 @@ int main(int argc, char* args[])
             frame = 0;
 		}
 	}
-    
+
 	//Destroy the various items
 	SDLAuxiliary::cleanup(renderer, window);
 	IMG_Quit();
